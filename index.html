@@ -5,35 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --danger: #FF3B30; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
         .app-container { width: 100%; max-width: 375px; }
-        
-        /* LOGIN */
-        .login-screen { background: var(--card); padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .login-screen h1 { font-size: 24px; margin-bottom: 10px; color: #1c1c1e; }
-        input[type="password"] { width: 100%; padding: 15px; border: 1px solid #d1d1d6; border-radius: 12px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; }
-        
-        /* APP INTERFACE */
         .card { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        h2 { font-size: 17px; color: #8e8e93; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: 500; }
-        input[type="date"], input[type="time"], input[type="text"] { 
-            width: 100%; padding: 12px; border: none; background: #f2f2f7; border-radius: 10px; font-size: 16px; box-sizing: border-box; -webkit-appearance: none;
-        }
-        
-        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.7; }
-
-        .stats { display: flex; justify-content: space-between; margin-top: 10px; }
-        .stat-box { text-align: center; flex: 1; }
-        .stat-value { display: block; font-size: 22px; font-weight: 700; color: var(--primary); }
-        .stat-label { font-size: 12px; color: #8e8e93; }
-
-        .log-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
         .hidden { display: none !important; }
         
-        .btn-delete { background: none; border: none; color: var(--danger); width: 100%; margin-top: 15px; font-size: 13px; font-weight: 500; cursor: pointer; padding: 10px; }
+        /* Stili Login */
+        .login-screen { background: var(--card); padding: 30px; border-radius: 20px; text-align: center; }
+        input { width: 100%; padding: 12px; border: 1px solid #d1d1d6; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
+        
+        /* Bottoni */
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; }
+        .btn-delete { background: none; border: none; color: var(--danger); width: 100%; margin-top: 15px; font-size: 13px; cursor: pointer; }
+        
+        /* Dialogo di conferma personalizzato */
+        #confirm-dialog { background: #fff; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #ddd; margin-top: 10px; }
+        .btn-confirm { background: var(--danger); color: white; padding: 10px; border-radius: 8px; border: none; margin: 5px; cursor: pointer; }
+        .btn-cancel { background: #8e8e93; color: white; padding: 10px; border-radius: 8px; border: none; margin: 5px; cursor: pointer; }
+
+        .log-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -41,53 +31,33 @@
 <div class="app-container">
     <div id="login-screen" class="login-screen">
         <h1>Benvenuto</h1>
-        <p>Inserisci il tuo codice cliente</p>
-        <input type="password" id="pw" pattern="\d*" inputmode="numeric">
+        <input type="password" id="pw" placeholder="Codice Cliente" inputmode="numeric">
         <button class="btn" onclick="login()">Accedi</button>
     </div>
 
     <div id="main-app" class="hidden">
         <div class="card">
             <h2>Nuovo Rapporto</h2>
-            <div class="input-group">
-                <label>Data</label>
-                <input type="date" id="data">
-            </div>
-            <div class="input-group">
-                <label>Luogo / Cliente</label>
-                <input type="text" id="luogo" placeholder="es. Domicilio Rossi">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;">
-                    <label>Inizio</label>
-                    <input type="time" id="inizio">
-                </div>
-                <div class="input-group" style="flex: 1;">
-                    <label>Fine</label>
-                    <input type="time" id="fine">
-                </div>
+            <input type="date" id="data">
+            <input type="text" id="luogo" placeholder="Luogo lavoro">
+            <div style="display:flex; gap:10px;">
+                <input type="time" id="inizio">
+                <input type="time" id="fine">
             </div>
             <button class="btn" onclick="salva()">Registra Ore</button>
         </div>
 
         <div class="card">
-            <h2>Riepilogo Mese</h2>
-            <div class="stats">
-                <div class="stat-box">
-                    <span class="stat-value" id="tot-mese">0.0</span>
-                    <span class="stat-label">Ore Totali</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-value" id="count-giorni">0</span>
-                    <span class="stat-label">Turni</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" id="history-card">
-            <h2>Ultime Attività</h2>
+            <h3>Totale Mese: <span id="tot-mese">0.0</span>h</h3>
             <div id="log-list"></div>
-            <button class="btn-delete" onclick="clearAll()">🗑️ Cancella tutto lo storico</button>
+
+            <button id="del-btn" class="btn-delete" onclick="showConfirm()">🗑️ Cancella tutto lo storico</button>
+            
+            <div id="confirm-dialog" class="hidden">
+                <p style="font-size:14px; color:red;"><b>Sei sicuro?</b><br>I dati verranno persi per sempre.</p>
+                <button class="btn-confirm" onclick="clearAll()">SI, CANCELLA</button>
+                <button class="btn-cancel" onclick="hideConfirm()">NO, ANNULLA</button>
+            </div>
         </div>
     </div>
 </div>
@@ -102,71 +72,57 @@
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('data').valueAsDate = new Date();
             render();
-        } else {
-            alert("Password errata");
-        }
+        } else { alert("Errata"); }
     }
 
     function salva() {
         const d = document.getElementById('data').value;
-        const l = document.getElementById('luogo').value;
+        const l = document.getElementById('luogo').value || 'Senza nome';
         const i = document.getElementById('inizio').value;
         const f = document.getElementById('fine').value;
-
-        if(!d || !i || !f) return alert("Per favore, compila tutti i campi!");
+        if(!d || !i || !f) return alert("Compila tutto");
 
         const s = new Date(`2000-01-01T${i}`);
         const e = new Date(`2000-01-01T${f}`);
         let diff = (e - s) / 1000 / 60 / 60;
         if(diff < 0) diff += 24;
 
-        database.push({ data: d, luogo: l || 'Non specificato', ore: diff });
+        database.push({ data: d, luogo: l, ore: diff });
         localStorage.setItem('user_data_v1', JSON.stringify(database));
         render();
-        alert("Ore registrate con successo!");
     }
 
     function render() {
         const list = document.getElementById('log-list');
         const mTotal = document.getElementById('tot-mese');
-        const gCount = document.getElementById('count-giorni');
-        
-        let html = "";
-        let totale = 0;
+        let html = ""; let totale = 0;
         const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
 
-        // Ordiniamo per data decrescente (più recenti in alto)
-        const sortedData = [...database].sort((a,b) => new Date(b.data) - new Date(a.data));
-
-        sortedData.forEach(item => {
-            const itemDate = new Date(item.data);
-            if(itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear) {
-                totale += item.ore;
-            }
-            html += `<div class="log-item">
-                <span><b>${item.data}</b><br><small>${item.luogo}</small></span>
-                <span>${item.ore.toFixed(2)}h</span>
-            </div>`;
+        database.slice().reverse().forEach(item => {
+            if(new Date(item.data).getMonth() === currentMonth) { totale += item.ore; }
+            html += `<div class="log-item"><span><b>${item.data}</b><br>${item.luogo}</span><span>${item.ore.toFixed(2)}h</span></div>`;
         });
-
-        list.innerHTML = html || "<p style='color:#ccc; text-align:center; padding:20px;'>Nessun dato registrato</p>";
+        list.innerHTML = html;
         mTotal.innerText = totale.toFixed(1);
-        gCount.innerText = database.length;
+    }
+
+    // Funzioni di cancellazione modificate per Iframe
+    function showConfirm() {
+        document.getElementById('confirm-dialog').classList.remove('hidden');
+        document.getElementById('del-btn').classList.add('hidden');
+    }
+
+    function hideConfirm() {
+        document.getElementById('confirm-dialog').classList.add('hidden');
+        document.getElementById('del-btn').classList.remove('hidden');
     }
 
     function clearAll() {
-        // Messaggio di sicurezza
-        const conferma = confirm("⚠️ ATTENZIONE\n\nVuoi davvero cancellare tutto lo storico delle ore?\nQuesta azione non può essere annullata.");
-        
-        if(conferma) {
-            database = [];
-            localStorage.removeItem('user_data_v1');
-            render();
-            alert("Storico cancellato.");
-        }
+        database = [];
+        localStorage.removeItem('user_data_v1');
+        render();
+        hideConfirm();
     }
 </script>
-
 </body>
 </html>
