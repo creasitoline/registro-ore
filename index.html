@@ -3,192 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Work Log App</title>
+    <title>Gestione Ore Lavoro</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --danger: #FF3B30; --text: #000000; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
-        
+        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; --secondary: #8E8E93; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); }
         .app-container { padding: 20px; max-width: 500px; margin: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .hidden { display: none !important; }
         
-        h2 { margin-top: 0; font-size: 20px; }
-        input { width: 100%; padding: 12px; border: 1px solid #d1d1d6; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; background: #fff; }
-        
-        /* Bottoni */
-        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; }
-        .btn-outline { background: none; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }
+        /* Input e Bottoni */
+        input { width: 100%; padding: 14px; border: 1px solid #d1d1d6; border-radius: 12px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; background: #fff; }
+        .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.7; }
         
         /* Navigazione Inferiore */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #d1d1d6; z-index: 100; }
-        .nav-item { border: none; background: none; color: #8e8e93; display: flex; flex-direction: column; align-items: center; font-size: 11px; cursor: pointer; flex: 1; }
+        .nav-item { border: none; background: none; color: var(--secondary); display: flex; flex-direction: column; align-items: center; font-size: 11px; cursor: pointer; flex: 1; text-decoration: none; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 24px; margin-bottom: 4px; }
 
-        /* Liste */
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
-        .month-row { display: flex; justify-content: space-between; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; cursor: pointer; font-weight: 600; border: 1px solid #eee; }
+        /* Liste e Mesi */
+        .month-row { display: flex; justify-content: space-between; padding: 18px; background: white; border-radius: 15px; margin-bottom: 10px; cursor: pointer; font-weight: 600; border: 1px solid #e5e5ea; }
+        .log-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
         
+        /* Overlay Dettaglio */
         #detail-view { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 200; overflow-y: auto; padding: 20px; }
+        .header-detail { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div id="screen-login" class="screen">
-        <div class="card" style="margin-top: 50px; text-align: center;">
-            <span style="font-size: 60px;">👤</span>
-            <h1>Login</h1>
-            <input type="password" id="pw" placeholder="Inserisci Password" inputmode="numeric">
-            <button class="btn" onclick="checkLogin()">Accedi</button>
+    <div id="screen-login">
+        <div class="card" style="text-align: center; margin-top: 40px;">
+            <div style="font-size: 60px; margin-bottom: 10px;">👤</div>
+            <h1>Benvenuto</h1>
+            <p style="color: var(--secondary);">Inserisci il tuo codice identificativo</p>
+            <input type="text" id="user-id" placeholder="Codice Personale (es: LAURA01)" style="text-align: center; text-transform: uppercase;">
+            <button class="btn" onclick="login()">Accedi</button>
         </div>
     </div>
 
-    <div id="screen-form" class="screen hidden">
+    <div id="screen-form" class="hidden">
         <div class="card">
-            <h2>✍️ Registra Ore</h2>
-            <label>Data</label>
+            <h2 style="margin-top:0">⏱️ Registra Ore</h2>
+            <label style="font-size: 12px; font-weight: bold;">DATA</label>
             <input type="date" id="data">
-            <label>Luogo</label>
-            <input type="text" id="luogo" placeholder="Cantiere / Ufficio">
+            <label style="font-size: 12px; font-weight: bold;">LUOGO</label>
+            <input type="text" id="luogo" placeholder="Nome Cantiere / Luogo">
             <div style="display:flex; gap:10px;">
-                <div style="flex:1"><label>Inizio</label><input type="time" id="inizio"></div>
-                <div style="flex:1"><label>Fine</label><input type="time" id="fine"></div>
+                <div style="flex:1"><label style="font-size: 12px; font-weight: bold;">INIZIO</label><input type="time" id="inizio"></div>
+                <div style="flex:1"><label style="font-size: 12px; font-weight: bold;">FINE</label><input type="time" id="fine"></div>
             </div>
             <button class="btn" onclick="salvaOra()">Salva Rapporto</button>
         </div>
-        
-        <div class="card">
-            <h3>Ore di oggi</h3>
-            <div id="today-list"></div>
-        </div>
     </div>
 
-    <div id="screen-archive" class="screen hidden">
-        <h2>📅 Chiusura Mesi</h2>
+    <div id="screen-archive" class="hidden">
+        <h2 style="margin-bottom:20px;">📅 Archivio Mensile</h2>
         <div id="months-container"></div>
     </div>
 </div>
 
 <div id="detail-view" class="hidden">
-    <button class="btn btn-outline" onclick="closeDetail()" style="width: auto; padding: 8px 15px;">← Indietro</button>
-    <h2 id="detail-title" style="margin-top:20px;">Dettaglio Gennaio</h2>
+    <div class="header-detail">
+        <button onclick="closeDetail()" style="border:none; background:#e5e5ea; padding:10px; border-radius:10px; cursor:pointer;">← Indietro</button>
+        <h2 id="detail-title" style="margin:0">Mese</h2>
+    </div>
     <div class="card" id="detail-list"></div>
-    <div class="card" style="background: var(--primary); color: white;">
-        <strong>TOTALE MESE: <span id="detail-total">0</span>h</strong>
+    <div class="card" style="background: var(--primary); color: white; text-align: center;">
+        <span style="font-size: 14px;">TOTALE ORE</span><br>
+        <strong style="font-size: 24px;"><span id="detail-total">0</span>h</strong>
     </div>
 </div>
 
 <nav id="navbar" class="bottom-nav hidden">
-    <button class="nav-item active" id="nav-login" onclick="switchScreen('login')">
-        <span class="nav-icon">👤</span><span>Login</span>
-    </button>
-    <button class="nav-item" id="nav-form" onclick="switchScreen('form')">
+    <button class="nav-item active" id="nav-form" onclick="switchTab('form')">
         <span class="nav-icon">⏱️</span><span>Ore Lavoro</span>
     </button>
-    <button class="nav-item" id="nav-archive" onclick="switchScreen('archive')">
-        <span class="nav-icon">📊</span><span>Mesi</span>
+    <button class="nav-item" id="nav-archive" onclick="switchTab('archive')">
+        <span class="nav-icon">📅</span><span>Mesi</span>
+    </button>
+    <button class="nav-item" onclick="location.reload()">
+        <span class="nav-icon">🚪</span><span>Esci</span>
     </button>
 </nav>
 
 <script>
-    const PASS = "123";
-    let database = JSON.parse(localStorage.getItem('work_data_v2')) || [];
-    let isLoggedIn = false;
+    // --- TUA CONFIGURAZIONE FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaQzWhr4z-2Js0TLi3b7j7KDs7yATgpDY",
+      authDomain: "app-ore-lavoro.firebaseapp.com",
+      projectId: "app-ore-lavoro",
+      storageBucket: "app-ore-lavoro.firebasestorage.app",
+      messagingSenderId: "193912143318",
+      appId: "1:193912143318:web:03994b97b7ad1d085f3877"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // Inizializzazione
-    document.getElementById('data').valueAsDate = new Date();
+    let CURRENT_USER_ID = "";
+    let database = [];
 
-    function checkLogin() {
-        if(document.getElementById('pw').value === PASS) {
-            isLoggedIn = true;
-            document.getElementById('navbar').classList.remove('hidden');
-            switchScreen('form');
-        } else {
-            alert("Password errata!");
-        }
+    // Funzione Login
+    function login() {
+        const id = document.getElementById('user-id').value.trim().toUpperCase();
+        if(id.length < 2) return alert("Inserisci un codice valido");
+        
+        CURRENT_USER_ID = id;
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-form').classList.remove('hidden');
+        document.getElementById('navbar').classList.remove('hidden');
+        document.getElementById('data').valueAsDate = new Date();
+        
+        ascoltaDatiCloud();
     }
 
-    function switchScreen(screenId) {
-        if(!isLoggedIn && screenId !== 'login') return;
-
-        // Gestione visibilità screen
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-        document.getElementById('screen-' + screenId).classList.remove('hidden');
-
-        // Gestione icone active
+    function switchTab(tab) {
+        document.getElementById('screen-form').classList.toggle('hidden', tab !== 'form');
+        document.getElementById('screen-archive').classList.toggle('hidden', tab !== 'archive');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav-' + screenId).classList.add('active');
-
-        if(screenId === 'archive') renderMonths();
-        if(screenId === 'form') renderToday();
+        document.getElementById('nav-' + tab).classList.add('active');
+        if(tab === 'archive') renderMonths();
     }
 
-    function salvaOra() {
+    // Salva su Firebase
+    async function salvaOra() {
         const d = document.getElementById('data').value;
-        const l = document.getElementById('luogo').value || 'Generico';
+        const l = document.getElementById('luogo').value || 'Senza nome';
         const i = document.getElementById('inizio').value;
         const f = document.getElementById('fine').value;
 
-        if(!d || !i || !f) return alert("Inserisci tutti i dati");
+        if(!d || !i || !f) return alert("Compila tutti i campi");
 
         const start = new Date(`2000-01-01T${i}`);
         const end = new Date(`2000-01-01T${f}`);
         let diff = (end - start) / 1000 / 60 / 60;
         if(diff < 0) diff += 24;
 
-        database.push({ data: d, luogo: l, ore: diff });
-        localStorage.setItem('work_data_v2', JSON.stringify(database));
-        
-        alert("Salvato correttamente!");
-        renderToday();
+        try {
+            await db.collection("ore_lavoro").add({
+                userId: CURRENT_USER_ID,
+                data: d,
+                luogo: l,
+                ore: diff,
+                timestamp: Date.now()
+            });
+            alert("✅ Ore registrate con successo!");
+            document.getElementById('luogo').value = "";
+            document.getElementById('inizio').value = "";
+            document.getElementById('fine').value = "";
+        } catch (e) {
+            alert("Errore salvataggio: " + e);
+        }
     }
 
-    function renderToday() {
-        const today = new Date().toISOString().split('T')[0];
-        const list = document.getElementById('today-list');
-        const todayData = database.filter(item => item.data === today);
-        
-        list.innerHTML = todayData.length ? "" : "<p>Nessun inserimento oggi</p>";
-        todayData.forEach(item => {
-            list.innerHTML += `<div class="log-item"><span>${item.luogo}</span> <b>${item.ore.toFixed(2)}h</b></div>`;
-        });
+    // Legge i dati filtrati per l'ID utente inserito
+    function ascoltaDatiCloud() {
+        db.collection("ore_lavoro")
+          .where("userId", "==", CURRENT_USER_ID)
+          .orderBy("data", "desc")
+          .onSnapshot((snapshot) => {
+              database = snapshot.docs.map(doc => doc.data());
+          });
     }
 
     function renderMonths() {
         const container = document.getElementById('months-container');
         container.innerHTML = "";
-
-        // Raggruppa per Anno-Mese
         const groups = {};
+
         database.forEach(item => {
-            const mKey = item.data.substring(0, 7); // YYYY-MM
-            if(!groups[mKey]) groups[mKey] = 0;
-            groups[mKey] += item.ore;
+            const mKey = item.data.substring(0, 7); // Es: 2026-03
+            groups[mKey] = (groups[mKey] || 0) + item.ore;
         });
 
         const sortedMonths = Object.keys(groups).sort().reverse();
+        if(sortedMonths.length === 0) container.innerHTML = "<p style='text-align:center'>Nessun dato presente</p>";
 
         sortedMonths.forEach(mKey => {
-            const dateObj = new Date(mKey + "-01");
-            const monthName = dateObj.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
-            
+            const [anno, mese] = mKey.split('-');
+            const dateObj = new Date(anno, mese - 1);
+            const nomeMese = dateObj.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+
             const div = document.createElement('div');
             div.className = 'month-row';
-            div.onclick = () => showMonthDetail(mKey);
-            div.innerHTML = `<span>${monthName.toUpperCase()}</span> <span>${groups[mKey].toFixed(2)}h ></span>`;
+            div.onclick = () => showMonthDetail(mKey, nomeMese);
+            div.innerHTML = `<span>${nomeMese.toUpperCase()}</span> <span>${groups[mKey].toFixed(2)}h ></span>`;
             container.appendChild(div);
         });
     }
 
-    function showMonthDetail(mKey) {
-        const detailView = document.getElementById('detail-view');
+    function showMonthDetail(mKey, nomeMese) {
         const list = document.getElementById('detail-list');
-        const title = document.getElementById('detail-title');
         const totalSpan = document.getElementById('detail-total');
-        
-        const monthData = database.filter(item => item.data.startsWith(mKey))
-                                  .sort((a,b) => new Date(a.data) - new Date(b.data));
+        const monthData = database.filter(item => item.data.startsWith(mKey)).sort((a,b) => new Date(a.data) - new Date(b.data));
         
         let total = 0;
         list.innerHTML = "";
@@ -201,15 +214,14 @@
                 </div>`;
         });
 
-        title.innerText = "Dettaglio " + mKey;
+        document.getElementById('detail-title').innerText = nomeMese.toUpperCase();
         totalSpan.innerText = total.toFixed(2);
-        detailView.classList.remove('hidden');
+        document.getElementById('detail-view').classList.remove('hidden');
     }
 
     function closeDetail() {
         document.getElementById('detail-view').classList.add('hidden');
     }
 </script>
-
 </body>
 </html>
